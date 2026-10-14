@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -7,7 +6,7 @@
   <meta name="theme-color" content="#070a14">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>Mes devoirs</title>
+  <title>SK NOTES</title>
 
   <!-- Logo de l'application -->
   <link rel="icon" type="image/png" href="./logo.png">
@@ -30,6 +29,7 @@
     }
     main { max-width: 620px; margin: auto; padding: calc(28px + env(safe-area-inset-top)) 18px calc(110px + env(safe-area-inset-bottom)); }
 
+    .logo { display: block; width: 84px; height: 84px; border-radius: 22px; margin: 0 0 14px; }
     .date { color: var(--muted); font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; }
     h1 { margin: 4px 0 20px; font-size: 34px; letter-spacing: -.02em; }
     .progress { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 16px 18px; margin-bottom: 26px; backdrop-filter: blur(12px); }
@@ -92,7 +92,8 @@
 <body>
   <!-- Écran de connexion -->
   <section class="login" id="login" hidden>
-    <h1>📚 Mes devoirs</h1>
+    <img class="logo" src="logo.png" alt="Logo SK NOTES">
+    <h1>SK NOTES</h1>
     <p>Connecte-toi pour retrouver tes tâches sur tous tes appareils.</p>
     <form id="login-form">
       <input type="email" id="email" placeholder="E-mail" required autocomplete="email">
@@ -106,8 +107,9 @@
   <!-- Application -->
   <div id="app" hidden>
     <main>
+      <img class="logo" src="logo.png" alt="Logo SK NOTES">
       <div class="date" id="date"></div>
-      <h1>📚 Mes devoirs</h1>
+      <h1>SK NOTES</h1>
       <div class="progress">
         <div class="progress-top"><strong id="progress-text"></strong><span id="progress-pct"></span></div>
         <div class="bar"><div class="fill" id="fill"></div></div>
@@ -147,7 +149,7 @@
     import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebaseConfig = {
-      apiKey: "AIzaSyBnAmNC-WyEmws3Lt55hjzCzIwBQzP-Z-Ao",
+      apiKey: "AIzaSyBnAmNC-WyEmws3Lt55hjzCzIwBQzPZ-Ao",
       authDomain: "sk-notes-skd.firebaseapp.com",
       projectId: "sk-notes-skd",
       storageBucket: "sk-notes-skd.firebasestorage.app",
