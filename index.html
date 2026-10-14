@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#070a14">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Mes devoirs</title>
+  <style>
+    :root {
+      --bg: #070a14; --card: rgba(255,255,255,.045); --border: rgba(255,255,255,.08);
+      --text: #f5f7ff; --muted: #8b93a7; --accent: #a78bfa;
+    }
+    [hidden] { display: none !important; }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body {
+      margin: 0; min-height: 100vh; color: var(--text);
+      font-family: -apple-system, system-ui, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 10% -10%, rgba(167,139,250,.35), transparent 45%),
+        radial-gradient(circle at 110% 15%, rgba(56,189,248,.18), transparent 40%),
+        var(--bg);
+    }
+    main { max-width: 620px; margin: auto; padding: calc(28px + env(safe-area-inset-top)) 18px calc(110px + env(safe-area-inset-bottom)); }
+
+    .date { color: var(--muted); font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; }
+    h1 { margin: 4px 0 20px; font-size: 34px; letter-spacing: -.02em; }
+    .progress { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 16px 18px; margin-bottom: 26px; backdrop-filter: blur(12px); }
+    .progress-top { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 10px; }
+    .progress-top span:last-child { color: var(--muted); }
+    .bar { height: 8px; border-radius: 99px; background: rgba(255,255,255,.08); overflow: hidden; }
+    .fill { height: 100%; width: 0; border-radius: 99px; background: linear-gradient(90deg, #a78bfa, #38bdf8); transition: width .4s ease; }
+
+    .group { margin-bottom: 26px; }
+    .group-head { display: flex; align-items: center; gap: 8px; margin: 0 4px 10px; }
+    .group-head h2 { margin: 0; font-size: 17px; }
+    .count { margin-left: auto; font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 99px; color: var(--g); background: rgba(255,255,255,.06); }
+    .empty { color: var(--muted); font-size: 14px; margin: 0 4px; }
+
+    .task {
+      display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: start;
+      padding: 14px; margin-bottom: 10px; background: var(--card);
+      border: 1px solid var(--border); border-left: 3px solid var(--c); border-radius: 16px;
+      transition: opacity .25s, transform .15s;
+    }
+    .task:active { transform: scale(.99); }
+    .check { width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--c); background: transparent; display: grid; place-items: center; padding: 0; cursor: pointer; color: #0b0f1a; font-weight: 900; font-size: 14px; }
+    .done .check { background: var(--c); }
+    .done .check::after { content: "✓"; }
+    .done { opacity: .45; }
+    .done .title { text-decoration: line-through; }
+    .chip { display: inline-block; font-size: 12px; font-weight: 700; color: var(--c); padding: 3px 8px; border-radius: 8px; margin-bottom: 6px; }
+    .title { margin: 0; font-weight: 600; line-height: 1.35; overflow-wrap: anywhere; }
+    .detail { margin: 5px 0 0; color: var(--muted); font-size: 14px; line-height: 1.4; overflow-wrap: anywhere; }
+    .del { border: 0; background: none; color: var(--muted); font-size: 22px; line-height: 1; padding: 2px 4px; cursor: pointer; }
+    .link { display: block; margin: 10px auto 0; border: 0; background: none; color: var(--muted); font: inherit; font-size: 14px; text-decoration: underline; cursor: pointer; }
+
+    .fab { position: fixed; right: 22px; bottom: calc(22px + env(safe-area-inset-bottom)); width: 60px; height: 60px; border: 0; border-radius: 50%; font-size: 30px; color: white; background: linear-gradient(135deg, #a78bfa, #6366f1); box-shadow: 0 10px 30px rgba(99,102,241,.5); cursor: pointer; }
+
+    dialog { width: 100%; max-width: 620px; margin: auto auto 0; border: 0; border-radius: 26px 26px 0 0; padding: 22px 18px calc(22px + env(safe-area-inset-bottom)); background: #121829; color: var(--text); }
+    dialog::backdrop { background: rgba(0,0,0,.55); backdrop-filter: blur(4px); }
+    dialog h3 { margin: 0 0 16px; font-size: 20px; }
+    label.field { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; font-weight: 600; }
+    input[type="text"], input[type="email"], input[type="password"], select {
+      width: 100%; font: inherit; font-size: 16px; color: var(--text);
+      background: rgba(255,255,255,.05); border: 1px solid var(--border);
+      border-radius: 12px; padding: 13px; margin-bottom: 14px; outline: none;
+    }
+    input:focus, select:focus { border-color: var(--accent); }
+    .segmented { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 18px; }
+    .segmented label { text-align: center; font-size: 14px; font-weight: 600; padding: 11px 4px; border-radius: 12px; background: rgba(255,255,255,.05); border: 1px solid var(--border); cursor: pointer; }
+    .segmented input { display: none; }
+    .segmented label:has(input:checked) { background: rgba(167,139,250,.2); border-color: var(--accent); }
+    .actions { display: grid; grid-template-columns: 1fr 2fr; gap: 10px; }
+    .btn { font: inherit; font-weight: 700; border: 0; border-radius: 14px; padding: 14px; cursor: pointer; }
+    .cancel { background: rgba(255,255,255,.07); color: var(--text); }
+    .submit { background: linear-gradient(135deg, #a78bfa, #6366f1); color: white; }
+
+    .login { max-width: 420px; margin: auto; padding: calc(80px + env(safe-area-inset-top)) 22px 40px; }
+    .login p { color: var(--muted); margin: 0 0 24px; }
+    .login .btn { width: 100%; margin-bottom: 10px; }
+    .error { color: #f87171 !important; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <!-- Écran de connexion -->
+  <section class="login" id="login" hidden>
+    <h1>📚 Mes devoirs</h1>
+    <p>Connecte-toi pour retrouver tes tâches sur tous tes appareils.</p>
+    <form id="login-form">
+      <input type="email" id="email" placeholder="E-mail" required autocomplete="email">
+      <input type="password" id="password" placeholder="Mot de passe (6 caractères min.)" required minlength="6" autocomplete="current-password">
+      <button type="submit" class="btn submit">Se connecter</button>
+      <button type="button" class="btn cancel" id="signup">Créer mon compte</button>
+      <p class="error" id="login-error"></p>
+    </form>
+  </section>
+
+  <!-- Application -->
+  <div id="app" hidden>
+    <main>
+      <div class="date" id="date"></div>
+      <h1>📚 Mes devoirs</h1>
+      <div class="progress">
+        <div class="progress-top"><strong id="progress-text"></strong><span id="progress-pct"></span></div>
+        <div class="bar"><div class="fill" id="fill"></div></div>
+      </div>
+      <div id="board"></div>
+      <button class="link" id="clear" type="button">Effacer les tâches terminées</button>
+      <button class="link" id="logout" type="button">Se déconnecter</button>
+    </main>
+
+    <button class="fab" id="open" type="button" aria-label="Ajouter une tâche">+</button>
+
+    <dialog id="sheet">
+      <form id="form">
+        <h3>Nouvelle tâche</h3>
+        <label class="field" for="subject">Matière</label>
+        <select id="subject"></select>
+        <label class="field" for="title">Tâche</label>
+        <input type="text" id="title" placeholder="Ex. Réviser le contrôle" required maxlength="140">
+        <label class="field" for="detail">Détail (optionnel)</label>
+        <input type="text" id="detail" placeholder="Ex. Chapitre 2, code Capytale…" maxlength="200">
+        <div class="segmented">
+          <label><input type="radio" name="when" value="demain" checked>🚨 Demain</label>
+          <label><input type="radio" name="when" value="vendredi">📅 Vendredi</label>
+          <label><input type="radio" name="when" value="plus-tard">🗓️ Plus tard</label>
+        </div>
+        <div class="actions">
+          <button type="button" class="btn cancel" id="cancel">Annuler</button>
+          <button type="submit" class="btn submit">Ajouter</button>
+        </div>
+      </form>
+    </dialog>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBnAmNC-WyEmws3Lt55hjzCzIwBQzPZ-Ao",
+      authDomain: "sk-notes-skd.firebaseapp.com",
+      projectId: "sk-notes-skd",
+      storageBucket: "sk-notes-skd.firebasestorage.app",
+      messagingSenderId: "556474579881",
+      appId: "1:556474579881:web:3e838998b6a038c7f8e2b8"
+    };
+
+    const auth = getAuth(initializeApp(firebaseConfig));
+    const db = getFirestore();
+
+    const SUBJECTS = {
+      anglais:  { label: "Anglais",      emoji: "🇬🇧", color: "#60a5fa" },
+      espagnol: { label: "Espagnol",     emoji: "🇪🇸", color: "#fbbf24" },
+      nsi:      { label: "NSI",          emoji: "💻", color: "#34d399" },
+      physique: { label: "Physique",     emoji: "⚛️", color: "#22d3ee" },
+      maths:    { label: "Maths",        emoji: "📐", color: "#f472b6" },
+      svt:      { label: "SVT",          emoji: "🧬", color: "#4ade80" },
+      histoire: { label: "Histoire-géo", emoji: "📜", color: "#fb923c" },
+      philo:    { label: "Philo",        emoji: "💭", color: "#c084fc" },
+      autre:    { label: "Autre",        emoji: "📌", color: "#94a3b8" }
+    };
+
+    const GROUPS = [
+      { id: "demain",    title: "Pour demain",   emoji: "🚨", color: "#f87171" },
+      { id: "vendredi",  title: "Pour vendredi", emoji: "📅", color: "#fbbf24" },
+      { id: "plus-tard", title: "Plus tard",     emoji: "🗓️", color: "#a78bfa" }
+    ];
+
+    const initialTasks = [
+      { id: 1, subject: "anglais",  title: "Faire le discours", detail: "", when: "demain", done: false },
+      { id: 2, subject: "espagnol", title: "Réviser", detail: "", when: "demain", done: false },
+      { id: 3, subject: "nsi",      title: "Leçon 2 « Structures de données » + exercices", detail: "Capytale : 046f-12277070", when: "demain", done: false },
+      { id: 4, subject: "nsi",      title: "Réviser le contrôle", detail: "", when: "vendredi", done: false },
+      { id: 5, subject: "physique", title: "Faire l’activité 4", detail: "", when: "vendredi", done: false },
+      { id: 6, subject: "histoire", title: "Contrôle lundi 9 novembre", detail: "Chapitre 2 + méthode de la question problématisée", when: "plus-tard", done: false },
+      { id: 7, subject: "svt",      title: "Commencer l’article", detail: "À rendre pour la rentrée", when: "plus-tard", done: false }
+    ];
+
+    let tasks = [];
+    let userDoc = null;
+    let stopListening = null;
+
+    function save() {
+      if (!userDoc) return;
+      setDoc(userDoc, { tasks }).catch(err => alert("Sauvegarde impossible : " + err.message));
+    }
+
+    function el(tag, className, text) {
+      const node = document.createElement(tag);
+      if (className) node.className = className;
+      if (text !== undefined) node.textContent = text;
+      return node;
+    }
+
+    function taskRow(task) {
+      const s = SUBJECTS[task.subject] || SUBJECTS.autre;
+      const row = el("div", "task" + (task.done ? " done" : ""));
+      row.style.setProperty("--c", s.color);
+
+      const check = el("button", "check");
+      check.type = "button";
+      check.setAttribute("aria-label", (task.done ? "Décocher : " : "Terminer : ") + task.title);
+      check.addEventListener("click", () => { task.done = !task.done; save(); render(); });
+
+      const body = el("div");
+      const chip = el("span", "chip", `${s.emoji} ${s.label}`);
+      chip.style.background = s.color + "22";
+      body.append(chip, el("p", "title", task.title));
+      if (task.detail) body.append(el("p", "detail", task.detail));
+
+      const del = el("button", "del", "×");
+      del.type = "button";
+      del.setAttribute("aria-label", "Supprimer : " + task.title);
+      del.addEventListener("click", () => {
+        if (!confirm(`Supprimer « ${task.title} » ?`)) return;
+        tasks = tasks.filter(t => t.id !== task.id);
+        save(); render();
+      });
+
+      row.append(check, body, del);
+      return row;
+    }
+
+    function render() {
+      const board = document.getElementById("board");
+      board.replaceChildren();
+
+      for (const g of GROUPS) {
+        const list = tasks.filter(t => t.when === g.id).sort((a, b) => a.done - b.done);
+        const remaining = list.filter(t => !t.done).length;
+
+        const section = el("section", "group");
+        const head = el("div", "group-head");
+        const count = el("span", "count", remaining ? `${remaining} restante${remaining > 1 ? "s" : ""}` : "✓");
+        count.style.setProperty("--g", g.color);
+        head.append(el("span", "", g.emoji), el("h2", "", g.title), count);
+        section.append(head);
+
+        if (!list.length) section.append(el("p", "empty", "Rien à faire ici 🎉"));
+        list.forEach(t => section.append(taskRow(t)));
+        board.append(section);
+      }
+
+      const done = tasks.filter(t => t.done).length;
+      const total = tasks.length;
+      const pct = total ? Math.round(done / total * 100) : 0;
+      document.getElementById("fill").style.width = pct + "%";
+      document.getElementById("progress-pct").textContent = pct + " %";
+      document.getElementById("progress-text").textContent =
+        total && done === total ? "Tout est fait 🎉" : `${done}/${total} tâches terminées`;
+      document.getElementById("clear").hidden = done === 0;
+    }
+
+    document.getElementById("date").textContent =
+      new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
+
+    const select = document.getElementById("subject");
+    for (const [key, s] of Object.entries(SUBJECTS)) {
+      const opt = el("option", "", `${s.emoji} ${s.label}`);
+      opt.value = key;
+      select.append(opt);
+    }
+
+    const sheet = document.getElementById("sheet");
+    const form = document.getElementById("form");
+    document.getElementById("open").addEventListener("click", () => sheet.showModal());
+    document.getElementById("cancel").addEventListener("click", () => sheet.close());
+
+    form.addEventListener("submit", e => {
+      e.preventDefault();
+      const title = document.getElementById("title").value.trim();
+      if (!title) return;
+      tasks.push({
+        id: Date.now(),
+        subject: select.value,
+        title,
+        detail: document.getElementById("detail").value.trim(),
+        when: form.querySelector("input[name='when']:checked").value,
+        done: false
+      });
+      save(); form.reset(); sheet.close(); render();
+    });
+
+    document.getElementById("clear").addEventListener("click", () => {
+      tasks = tasks.filter(t => !t.done);
+      save(); render();
+    });
+
+    // ---------- Connexion ----------
+    const loginBox = document.getElementById("login");
+    const appBox = document.getElementById("app");
+    const errorBox = document.getElementById("login-error");
+    const MESSAGES = {
+      "auth/invalid-credential": "E-mail ou mot de passe incorrect.",
+      "auth/invalid-email": "Adresse e-mail invalide.",
+      "auth/missing-password": "Entre un mot de passe.",
+      "auth/email-already-in-use": "Un compte existe déjà avec cet e-mail.",
+      "auth/weak-password": "Mot de passe trop court (6 caractères minimum).",
+      "auth/too-many-requests": "Trop d’essais, réessaie dans quelques minutes."
+    };
+    const showError = err => { errorBox.textContent = MESSAGES[err.code] || err.message; };
+    const creds = () => [document.getElementById("email").value.trim(), document.getElementById("password").value];
+
+    document.getElementById("login-form").addEventListener("submit", async e => {
+      e.preventDefault();
+      errorBox.textContent = "";
+      try { await signInWithEmailAndPassword(auth, ...creds()); } catch (err) { showError(err); }
+    });
+
+    document.getElementById("signup").addEventListener("click", async () => {
+      errorBox.textContent = "";
+      try { await createUserWithEmailAndPassword(auth, ...creds()); } catch (err) { showError(err); }
+    });
+
+    document.getElementById("logout").addEventListener("click", () => signOut(auth));
+
+    onAuthStateChanged(auth, user => {
+      if (stopListening) { stopListening(); stopListening = null; }
+      loginBox.hidden = !!user;
+      appBox.hidden = !user;
+      if (!user) { userDoc = null; tasks = []; return; }
+
+      userDoc = doc(db, "users", user.uid);
+      stopListening = onSnapshot(userDoc, snap => {
+        if (snap.exists()) {
+          tasks = snap.data().tasks || [];
+        } else {
+          // Première connexion : reprend les tâches déjà enregistrées sur cet appareil
+          let local = null;
+          try { local = JSON.parse(localStorage.getItem("mes-devoirs-v2")); } catch {}
+          tasks = Array.isArray(local) ? local : initialTasks;
+          save();
+        }
+        render();
+      }, err => alert("Lecture impossible : " + err.message));
+    });
+  </script>
+</body>
+</html>
