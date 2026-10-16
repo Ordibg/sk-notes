@@ -8,7 +8,6 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>SK NOTES</title>
 
-  <!-- Logo de l'application -->
   <link rel="icon" type="image/png" href="./logo.png">
   <link rel="apple-touch-icon" href="./logo.png">
 
@@ -40,9 +39,9 @@
 
     .group { margin-bottom: 26px; }
     .group-head { display: flex; align-items: center; gap: 8px; margin: 0 4px 10px; }
-    .group-head h2 { margin: 0; font-size: 17px; }
+    .group-head h2 { margin: 0; font-size: 17px; color: var(--g); }
     .count { margin-left: auto; font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 99px; color: var(--g); background: rgba(255,255,255,.06); }
-    .empty { color: var(--muted); font-size: 14px; margin: 0 4px; }
+    .empty { color: var(--muted); font-size: 15px; text-align: center; margin: 30px 0; }
 
     .task {
       display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: start;
@@ -56,9 +55,13 @@
     .done .check::after { content: "✓"; }
     .done { opacity: .45; }
     .done .title { text-decoration: line-through; }
+    .body { cursor: pointer; min-width: 0; }
     .chip { display: inline-block; font-size: 12px; font-weight: 700; color: var(--c); padding: 3px 8px; border-radius: 8px; margin-bottom: 6px; }
     .title { margin: 0; font-weight: 600; line-height: 1.35; overflow-wrap: anywhere; }
     .detail { margin: 5px 0 0; color: var(--muted); font-size: 14px; line-height: 1.4; overflow-wrap: anywhere; }
+    .due { margin: 7px 0 0; font-size: 13px; font-weight: 600; color: var(--muted); }
+    .due.soon { color: #fbbf24; }
+    .due.late { color: #f87171; }
     .del { border: 0; background: none; color: var(--muted); font-size: 22px; line-height: 1; padding: 2px 4px; cursor: pointer; }
     .link { display: block; margin: 10px auto 0; border: 0; background: none; color: var(--muted); font: inherit; font-size: 14px; text-decoration: underline; cursor: pointer; }
 
@@ -68,17 +71,20 @@
     dialog::backdrop { background: rgba(0,0,0,.55); backdrop-filter: blur(4px); }
     dialog h3 { margin: 0 0 16px; font-size: 20px; }
     label.field { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; font-weight: 600; }
-    input[type="text"], input[type="email"], input[type="password"], select {
+    input[type="text"], input[type="email"], input[type="password"], input[type="date"], select {
       width: 100%; font: inherit; font-size: 16px; color: var(--text);
       background: rgba(255,255,255,.05); border: 1px solid var(--border);
       border-radius: 12px; padding: 13px; margin-bottom: 14px; outline: none;
     }
+    input[type="date"] { display: block; min-height: 50px; color-scheme: dark; -webkit-appearance: none; appearance: none; }
+    input[type="date"]::-webkit-date-and-time-value { text-align: left; }
     input:focus, select:focus { border-color: var(--accent); }
-    .segmented { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 18px; }
-    .segmented label { text-align: center; font-size: 14px; font-weight: 600; padding: 11px 4px; border-radius: 12px; background: rgba(255,255,255,.05); border: 1px solid var(--border); cursor: pointer; }
-    .segmented input { display: none; }
-    .segmented label:has(input:checked) { background: rgba(167,139,250,.2); border-color: var(--accent); }
-    .actions { display: grid; grid-template-columns: 1fr 2fr; gap: 10px; }
+
+    .quick { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 8px; }
+    .quick button { font: inherit; font-size: 13px; font-weight: 600; color: var(--text); padding: 10px 2px; border-radius: 12px; background: rgba(255,255,255,.05); border: 1px solid var(--border); cursor: pointer; }
+    .quick button.active { background: rgba(167,139,250,.2); border-color: var(--accent); }
+
+    .actions { display: grid; grid-template-columns: 1fr 2fr; gap: 10px; margin-top: 4px; }
     .btn { font: inherit; font-weight: 700; border: 0; border-radius: 14px; padding: 14px; cursor: pointer; }
     .cancel { background: rgba(255,255,255,.07); color: var(--text); }
     .submit { background: linear-gradient(135deg, #a78bfa, #6366f1); color: white; }
@@ -123,21 +129,24 @@
 
     <dialog id="sheet">
       <form id="form">
-        <h3>Nouvelle tâche</h3>
+        <h3 id="sheet-title">Nouvelle tâche</h3>
         <label class="field" for="subject">Matière</label>
         <select id="subject"></select>
         <label class="field" for="title">Tâche</label>
         <input type="text" id="title" placeholder="Ex. Réviser le contrôle" required maxlength="140">
         <label class="field" for="detail">Détail (optionnel)</label>
         <input type="text" id="detail" placeholder="Ex. Chapitre 2, code Capytale…" maxlength="200">
-        <div class="segmented">
-          <label><input type="radio" name="when" value="demain" checked>🚨 Demain</label>
-          <label><input type="radio" name="when" value="vendredi">📅 Vendredi</label>
-          <label><input type="radio" name="when" value="plus-tard">🗓️ Plus tard</label>
+        <label class="field" for="due">Pour quand ?</label>
+        <div class="quick">
+          <button type="button" data-quick="today">Aujourd’hui</button>
+          <button type="button" data-quick="tomorrow">Demain</button>
+          <button type="button" data-quick="friday">Vendredi</button>
+          <button type="button" data-quick="none">Sans date</button>
         </div>
+        <input type="date" id="due">
         <div class="actions">
           <button type="button" class="btn cancel" id="cancel">Annuler</button>
-          <button type="submit" class="btn submit">Ajouter</button>
+          <button type="submit" class="btn submit" id="submit-btn">Ajouter</button>
         </div>
       </form>
     </dialog>
@@ -173,24 +182,56 @@
     };
 
     const GROUPS = [
-      { id: "demain",    title: "Pour demain",   emoji: "🚨", color: "#f87171" },
-      { id: "vendredi",  title: "Pour vendredi", emoji: "📅", color: "#fbbf24" },
-      { id: "plus-tard", title: "Plus tard",     emoji: "🗓️", color: "#a78bfa" }
+      { id: "late",     title: "En retard",     emoji: "⚠️", color: "#f87171" },
+      { id: "today",    title: "Aujourd’hui",   emoji: "🔥", color: "#fb923c" },
+      { id: "tomorrow", title: "Demain",        emoji: "🚨", color: "#fbbf24" },
+      { id: "week",     title: "Cette semaine", emoji: "📅", color: "#60a5fa" },
+      { id: "later",    title: "Plus tard",     emoji: "🗓️", color: "#a78bfa" },
+      { id: "nodate",   title: "Sans date",     emoji: "📌", color: "#94a3b8" },
+      { id: "done",     title: "Terminées",     emoji: "✅", color: "#34d399" }
     ];
 
-    const initialTasks = [
-      { id: 1, subject: "anglais",  title: "Faire le discours", detail: "", when: "demain", done: false },
-      { id: 2, subject: "espagnol", title: "Réviser", detail: "", when: "demain", done: false },
-      { id: 3, subject: "nsi",      title: "Leçon 2 « Structures de données » + exercices", detail: "Capytale : 046f-12277070", when: "demain", done: false },
-      { id: 4, subject: "nsi",      title: "Réviser le contrôle", detail: "", when: "vendredi", done: false },
-      { id: 5, subject: "physique", title: "Faire l’activité 4", detail: "", when: "vendredi", done: false },
-      { id: 6, subject: "histoire", title: "Contrôle lundi 9 novembre", detail: "Chapitre 2 + méthode de la question problématisée", when: "plus-tard", done: false },
-      { id: 7, subject: "svt",      title: "Commencer l’article", detail: "À rendre pour la rentrée", when: "plus-tard", done: false }
-    ];
+    // ---------- Dates ----------
+    const pad = n => String(n).padStart(2, "0");
+    const iso = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    const addDays = n => { const d = new Date(); d.setDate(d.getDate() + n); return iso(d); };
+    const nextFriday = () => { const n = (5 - new Date().getDay() + 7) % 7; return addDays(n === 0 ? 7 : n); };
+    const parse = s => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
 
+    function daysLeft(due) {
+      if (!due) return null;
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      return Math.round((parse(due) - today) / 86400000);
+    }
+
+    function groupOf(task) {
+      if (task.done) return "done";
+      const n = daysLeft(task.due);
+      if (n === null) return "nodate";
+      if (n < 0) return "late";
+      if (n === 0) return "today";
+      if (n === 1) return "tomorrow";
+      if (n <= 7) return "week";
+      return "later";
+    }
+
+    function dueText(due) {
+      const n = daysLeft(due);
+      const date = parse(due).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
+      let rel;
+      if (n < 0) rel = `en retard de ${-n} jour${n < -1 ? "s" : ""}`;
+      else if (n === 0) rel = "aujourd’hui";
+      else if (n === 1) rel = "demain";
+      else rel = `dans ${n} jours`;
+      return `📅 ${date} · ${rel}`;
+    }
+
+    // ---------- État ----------
     let tasks = [];
     let userDoc = null;
     let stopListening = null;
+    let editingId = null;
 
     function save() {
       if (!userDoc) return;
@@ -204,6 +245,7 @@
       return node;
     }
 
+    // ---------- Affichage ----------
     function taskRow(task) {
       const s = SUBJECTS[task.subject] || SUBJECTS.autre;
       const row = el("div", "task" + (task.done ? " done" : ""));
@@ -214,11 +256,17 @@
       check.setAttribute("aria-label", (task.done ? "Décocher : " : "Terminer : ") + task.title);
       check.addEventListener("click", () => { task.done = !task.done; save(); render(); });
 
-      const body = el("div");
+      const body = el("div", "body");
+      body.addEventListener("click", () => openSheet(task));
       const chip = el("span", "chip", `${s.emoji} ${s.label}`);
       chip.style.background = s.color + "22";
       body.append(chip, el("p", "title", task.title));
       if (task.detail) body.append(el("p", "detail", task.detail));
+      if (task.due) {
+        const n = daysLeft(task.due);
+        const cls = task.done ? "" : n < 0 ? " late" : n <= 1 ? " soon" : "";
+        body.append(el("p", "due" + cls, dueText(task.due)));
+      }
 
       const del = el("button", "del", "×");
       del.type = "button";
@@ -238,19 +286,22 @@
       board.replaceChildren();
 
       for (const g of GROUPS) {
-        const list = tasks.filter(t => t.when === g.id).sort((a, b) => a.done - b.done);
-        const remaining = list.filter(t => !t.done).length;
+        const list = tasks
+          .filter(t => groupOf(t) === g.id)
+          .sort((a, b) => (a.due || "9999").localeCompare(b.due || "9999") || a.id - b.id);
+        if (!list.length) continue;
 
         const section = el("section", "group");
+        section.style.setProperty("--g", g.color);
         const head = el("div", "group-head");
-        const count = el("span", "count", remaining ? `${remaining} restante${remaining > 1 ? "s" : ""}` : "✓");
-        count.style.setProperty("--g", g.color);
-        head.append(el("span", "", g.emoji), el("h2", "", g.title), count);
+        head.append(el("span", "", g.emoji), el("h2", "", g.title), el("span", "count", String(list.length)));
         section.append(head);
-
-        if (!list.length) section.append(el("p", "empty", "Rien à faire ici 🎉"));
         list.forEach(t => section.append(taskRow(t)));
         board.append(section);
+      }
+
+      if (!board.children.length) {
+        board.append(el("p", "empty", "Rien à faire 🎉 Appuie sur + pour ajouter une tâche."));
       }
 
       const done = tasks.filter(t => t.done).length;
@@ -263,9 +314,21 @@
       document.getElementById("clear").hidden = done === 0;
     }
 
-    document.getElementById("date").textContent =
-      new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
+    // ---------- Date du jour + mise à jour à minuit ----------
+    let currentDay = iso(new Date());
+    function showToday() {
+      document.getElementById("date").textContent =
+        new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
+    }
+    function checkDay() {
+      const d = iso(new Date());
+      if (d !== currentDay) { currentDay = d; showToday(); render(); }
+    }
+    showToday();
+    setInterval(checkDay, 60000);
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) checkDay(); });
 
+    // ---------- Formulaire (ajout + modification) ----------
     const select = document.getElementById("subject");
     for (const [key, s] of Object.entries(SUBJECTS)) {
       const opt = el("option", "", `${s.emoji} ${s.label}`);
@@ -275,22 +338,48 @@
 
     const sheet = document.getElementById("sheet");
     const form = document.getElementById("form");
-    document.getElementById("open").addEventListener("click", () => sheet.showModal());
+    const titleInput = document.getElementById("title");
+    const detailInput = document.getElementById("detail");
+    const dueInput = document.getElementById("due");
+
+    const QUICK = { today: () => addDays(0), tomorrow: () => addDays(1), friday: nextFriday, none: () => "" };
+    const quickButtons = document.querySelectorAll("[data-quick]");
+    function syncQuick() {
+      quickButtons.forEach(b => b.classList.toggle("active", QUICK[b.dataset.quick]() === dueInput.value));
+    }
+    quickButtons.forEach(b => b.addEventListener("click", () => { dueInput.value = QUICK[b.dataset.quick](); syncQuick(); }));
+    dueInput.addEventListener("input", syncQuick);
+    dueInput.addEventListener("change", syncQuick);
+
+    function openSheet(task) {
+      editingId = task ? task.id : null;
+      form.reset();
+      document.getElementById("sheet-title").textContent = task ? "Modifier la tâche" : "Nouvelle tâche";
+      document.getElementById("submit-btn").textContent = task ? "Enregistrer" : "Ajouter";
+      select.value = task && SUBJECTS[task.subject] ? task.subject : (task ? "autre" : "anglais");
+      titleInput.value = task ? task.title : "";
+      detailInput.value = task ? (task.detail || "") : "";
+      dueInput.value = task ? (task.due || "") : addDays(1);
+      syncQuick();
+      sheet.showModal();
+    }
+
+    document.getElementById("open").addEventListener("click", () => openSheet(null));
     document.getElementById("cancel").addEventListener("click", () => sheet.close());
 
     form.addEventListener("submit", e => {
       e.preventDefault();
-      const title = document.getElementById("title").value.trim();
+      const title = titleInput.value.trim();
       if (!title) return;
-      tasks.push({
-        id: Date.now(),
-        subject: select.value,
-        title,
-        detail: document.getElementById("detail").value.trim(),
-        when: form.querySelector("input[name='when']:checked").value,
-        done: false
-      });
-      save(); form.reset(); sheet.close(); render();
+      const data = { subject: select.value, title, detail: detailInput.value.trim(), due: dueInput.value };
+
+      if (editingId !== null) {
+        const t = tasks.find(x => x.id === editingId);
+        if (t) { Object.assign(t, data); delete t.when; }
+      } else {
+        tasks.push({ id: Date.now(), ...data, done: false });
+      }
+      save(); sheet.close(); render();
     });
 
     document.getElementById("clear").addEventListener("click", () => {
@@ -337,10 +426,9 @@
         if (snap.exists()) {
           tasks = snap.data().tasks || [];
         } else {
-          // Première connexion : reprend les tâches déjà enregistrées sur cet appareil
           let local = null;
           try { local = JSON.parse(localStorage.getItem("mes-devoirs-v2")); } catch {}
-          tasks = Array.isArray(local) ? local : initialTasks;
+          tasks = Array.isArray(local) ? local : [];
           save();
         }
         render();
